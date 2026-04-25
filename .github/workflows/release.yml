@@ -1,0 +1,52 @@
+# Build the Python sdist + wheel on every `vX.Y.Z` tag and attach them
+# to a GitHub Release.
+#
+# This package is source-install only — there is no PyPI publish job by
+# design. Install with:
+#   pip install git+https://github.com/animatica-ai/motionmcp-kimodo@vX.Y.Z
+# or download the wheel from the GitHub Release.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # required to create the release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify tag matches pyproject version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          PKG=$(python -c "import tomllib,sys; print(tomllib.loads(open('pyproject.toml','rb').read().decode())['project']['version'])")
+          echo "tag=$TAG  package=$PKG"
+          test "$TAG" = "$PKG"
+
+      - name: Install build tools
+        run: pip install --upgrade pip build
+
+      - name: Build sdist + wheel
+        # Note: this builds the package metadata only — it does NOT install
+        # the heavy `kimodo` runtime dep. End users still need to install
+        # kimodo + its torch/transformers stack separately.
+        run: python -m build
+
+      - name: List built artifacts
+        run: ls -la dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
