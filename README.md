@@ -12,10 +12,10 @@ cd motionmcp-kimodo
 pip install -e .
 ```
 
-This pulls [Kimodo][kimodo] from NVIDIA's `nv-tlabs/kimodo` GitHub repo
-as a git dependency (it isn't on PyPI). If the install fails on
-the Kimodo step, follow the upstream install instructions there first
-and re-run `pip install -e .`.
+This pulls [Kimodo][kimodo] from `animatica-ai/kimodo` as a git
+dependency (it isn't on PyPI). If the install fails on the Kimodo
+step, follow the upstream install instructions there first and re-run
+`pip install -e .`.
 
 Run:
 
@@ -27,7 +27,7 @@ That's a working MMCP server for Kimodo on `:8000`. Point the
 [Proscenium Blender plugin][proscenium] (the officially supported
 client) at `http://localhost:8000` and you're animating.
 
-[kimodo]: https://github.com/nv-tlabs/kimodo
+[kimodo]: https://github.com/animatica-ai/kimodo
 [proscenium]: https://github.com/animatica-ai/proscenium-blender
 [backbone]: https://animatica.ai/mmcp/docs/sdk/backbone
 [mmcp]: https://animatica.ai/mmcp

@@ -21,11 +21,11 @@ classifiers = [
 
 dependencies = [
     "motionmcp-sdk >= 0.1",
-    # The upstream Kimodo model lives in NVIDIA's nv-tlabs org; it isn't
-    # published to PyPI, so we pin a git source. Pip resolves this to the
-    # ``kimodo`` import package; tags or commits can be added with ``@ref``
-    # if upstream stability becomes an issue.
-    "kimodo @ git+https://github.com/nv-tlabs/kimodo.git",
+    # Kimodo isn't published to PyPI, so we pin a git source. Animatica
+    # maintains the fork at ``animatica-ai/kimodo`` (split out of the
+    # cloud server repo); tags or commits can be added with ``@ref`` if
+    # version pinning becomes important.
+    "kimodo @ git+https://github.com/animatica-ai/kimodo.git",
     "numpy >= 1.24",
     "torch >= 2.0",
 ]
