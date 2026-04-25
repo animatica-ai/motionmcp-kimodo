@@ -24,9 +24,9 @@ client) at `http://localhost:8000` and you're animating.
 
 [kimodo]: https://github.com/kimodo/kimodo
 [proscenium]: https://github.com/animatica-ai/proscenium-blender
-[backbone]: https://mmcp.dev/docs/sdk/backbone
-[mmcp]: https://mmcp.dev
-[impls]: https://mmcp.dev/docs/get-started/implementations
+[backbone]: https://animatica.ai/mmcp/docs/sdk/backbone
+[mmcp]: https://animatica.ai/mmcp
+[impls]: https://animatica.ai/mmcp/docs/get-started/implementations
 
 ## What this package is
 

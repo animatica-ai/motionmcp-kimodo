@@ -37,7 +37,7 @@ dev = [
 motionmcp-kimodo = "motionmcp_kimodo.cli:main"
 
 [project.urls]
-Homepage = "https://mmcp.dev"
+Homepage = "https://animatica.ai/mmcp"
 Source   = "https://github.com/animatica-ai/motionmcp-kimodo"
 Issues   = "https://github.com/animatica-ai/motionmcp-kimodo/issues"
 
