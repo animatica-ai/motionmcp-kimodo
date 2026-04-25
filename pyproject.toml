@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "motionmcp-kimodo"
+version = "0.1.0"
+description = "MMCP backbone for the Kimodo motion model. A drop-in motionmcp.Backbone that runs a Kimodo SOMA model under the protocol."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [{ name = "MMCP contributors" }]
+keywords = ["mmcp", "motionmcp", "kimodo", "motion", "animation", "backbone"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+]
+
+dependencies = [
+    "motionmcp >= 0.1",
+    "kimodo >= 1.0",
+    "numpy >= 1.24",
+    "torch >= 2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest >= 8.0",
+    "ruff >= 0.4",
+]
+
+[project.scripts]
+# `motionmcp-kimodo --port 8080 --model soma30` runs a server.
+motionmcp-kimodo = "motionmcp_kimodo.cli:main"
+
+[project.urls]
+Homepage = "https://mmcp.dev"
+Source   = "https://github.com/animatica-ai/motionmcp-kimodo"
+Issues   = "https://github.com/animatica-ai/motionmcp-kimodo/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/motionmcp_kimodo"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/motionmcp_kimodo", "tests", "README.md", "LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
