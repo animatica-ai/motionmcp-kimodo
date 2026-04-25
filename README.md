@@ -12,10 +12,11 @@ cd motionmcp-kimodo
 pip install -e .
 ```
 
-This pulls [Kimodo][kimodo] from `animatica-ai/kimodo` as a git
-dependency (it isn't on PyPI). If the install fails on the Kimodo
-step, follow the upstream install instructions there first and re-run
-`pip install -e .`.
+This pulls [Kimodo][kimodo] from `animatica-ai/kimodo` (a fork of the
+upstream `nv-tlabs/kimodo` with fixes for common install / runtime
+issues) as a git dependency — it isn't on PyPI. If the install fails
+on the Kimodo step, follow the install instructions in that repo and
+re-run `pip install -e .`.
 
 Run:
 

@@ -21,10 +21,10 @@ classifiers = [
 
 dependencies = [
     "motionmcp-sdk >= 0.1",
-    # Kimodo isn't published to PyPI, so we pin a git source. Animatica
-    # maintains the fork at ``animatica-ai/kimodo`` (split out of the
-    # cloud server repo); tags or commits can be added with ``@ref`` if
-    # version pinning becomes important.
+    # Kimodo isn't published to PyPI, so we pin a git source.
+    # ``animatica-ai/kimodo`` is a fork of upstream ``nv-tlabs/kimodo``
+    # with fixes for common install / runtime issues; pin tags or commits
+    # with ``@ref`` if version stability becomes important.
     "kimodo @ git+https://github.com/animatica-ai/kimodo.git",
     "numpy >= 1.24",
     "torch >= 2.0",
