@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "motionmcp >= 0.1",
+    "motionmcp-sdk >= 0.1",
     "kimodo >= 1.0",
     "numpy >= 1.24",
     "torch >= 2.0",
