@@ -45,6 +45,9 @@ Homepage = "https://animatica.ai/mmcp"
 Source   = "https://github.com/animatica-ai/motionmcp-kimodo"
 Issues   = "https://github.com/animatica-ai/motionmcp-kimodo/issues"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/motionmcp_kimodo"]
 
