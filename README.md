@@ -60,9 +60,19 @@ motionmcp-kimodo
 # Pick a model + bind explicitly:
 motionmcp-kimodo --model soma30 --port 8000 --device cuda:0
 
+# Text encoder: quantize the local LLM (LLM2Vec) to save VRAM — only when
+# TEXT_ENCODER_MODE=local (see table below). Values are Kimodo’s: 4bit or 8bit.
+TEXT_ENCODER_MODE=local motionmcp-kimodo --quantize 4bit
+
 # Or run as a module:
 python -m motionmcp_kimodo --model soma30
 ```
+
+The CLI `--quantize` flag sets `KIMODO_QUANTIZE` for Kimodo. It does **not**
+affect the motion/diffusion weights — only the **text encoder** when Kimodo
+loads `LLM2VecEncoder` (`TEXT_ENCODER_MODE=local`, or `auto` when falling
+back to local). The default server uses `TEXT_ENCODER_MODE=dummy`, so no LLM
+is loaded and `--quantize` has no effect unless you switch the mode.
 
 Clients pull the model's canonical skeleton from `/capabilities` and
 send it verbatim in their `/generate` request — the wire format is
@@ -73,7 +83,8 @@ Environment overrides:
 | Var | Effect |
 |---|---|
 | `KIMODO_MODEL` | Default model id when `--model` isn't passed |
-| `TEXT_ENCODER_MODE` | Passed to `kimodo.load_model` (default `"dummy"` for development) |
+| `TEXT_ENCODER_MODE` | Kimodo text path: `dummy` (default, no LLM), `local` (LLM2Vec on GPU), `api`, `auto`, etc. See Kimodo’s `load_model` docs. |
+| `KIMODO_QUANTIZE` | When using the local LLM encoder: `4bit` or `8bit` (BitsAndBytes). Set by `--quantize` or manually. Ignored with `dummy`. |
 
 ## Programmatic use
 
