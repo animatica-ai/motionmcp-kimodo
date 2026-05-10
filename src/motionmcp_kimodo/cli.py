@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 
 from motionmcp import serve
 
@@ -28,7 +29,17 @@ def main() -> None:
         default=None,
         help="torch device (default: cuda:0 if available, else cpu)",
     )
+    parser.add_argument(
+        "--quantize",
+        default=None,
+        help="BitsAndBytes quant for the Kimodo text encoder when TEXT_ENCODER_MODE=local "
+        "(4bit or 8bit). No effect with the default dummy encoder.",
+    )
+
     args = parser.parse_args()
+
+    if args.quantize:
+        os.environ["KIMODO_QUANTIZE"] = args.quantize.lower()
 
     serve(
         KimodoBackbone(model_id=args.model, device=args.device),
