@@ -11,6 +11,7 @@ range, prompt length, etc.) happens here.
 from __future__ import annotations
 
 import math
+from types import MethodType
 from typing import Any
 
 import numpy as np
@@ -24,6 +25,14 @@ from kimodo.constraints import (
     RightFootConstraintSet,
     RightHandConstraintSet,
     Root2DConstraintSet,
+)
+
+_EndEffectorTypes = (
+    EndEffectorConstraintSet,
+    LeftHandConstraintSet,
+    RightHandConstraintSet,
+    LeftFootConstraintSet,
+    RightFootConstraintSet,
 )
 from motionmcp import schemas
 from motionmcp.errors import ProtocolError
@@ -69,9 +78,14 @@ def translate_request(
     for idx, c in enumerate(req.constraints):
         _validate_constraint_frames(c, total_frames, idx)
 
-    # Compile the Kimodo constraint objects.
+    # Compile Kimodo constraints and move tensor fields to ``device``.
+    # Do not call ``ConstraintSet.to(device)``: it also moves ``skeleton``,
+    # whose asset buffers are float64 on CPU and break on MPS.
     constraint_lst = [
-        _constraint_to_kimodo(c, model, device, total_frames)
+        _finalize_constraint(
+            _constraint_to_kimodo(c, model, device, total_frames),
+            device,
+        )
         for c in req.constraints
     ]
 
@@ -131,6 +145,47 @@ def _validate_constraint_frames(c: schemas.Constraint, total_frames: int, idx: i
                 "total_frames":     total_frames,
             },
         )
+
+
+_CONSTRAINT_TENSOR_FIELDS = (
+    "frame_indices",
+    "pos_indices",
+    "rot_indices",
+    "global_joints_positions",
+    "global_joints_rots",
+    "smooth_root_2d",
+    "global_root_heading",
+    "root_y_pos",
+)
+
+
+def _place_constraint_tensors(constraint: Any, device: str) -> Any:
+    """Move constraint tensor fields to ``device``; leave ``skeleton`` unchanged."""
+    if not device or str(device) == "cpu":
+        return constraint
+    for name in _CONSTRAINT_TENSOR_FIELDS:
+        t = getattr(constraint, name, None)
+        if isinstance(t, torch.Tensor):
+            setattr(constraint, name, t.to(device))
+    return constraint
+
+
+def _bind_crop_move_device(constraint: Any, device: str) -> None:
+    """Kimodo ``crop_move`` rebuilds EE constraints with CPU ``pos_indices`` / ``rot_indices``."""
+    orig = constraint.crop_move
+
+    def crop_move(self: Any, start: int, end: int) -> Any:
+        return _place_constraint_tensors(orig(start, end), device)
+
+    constraint.crop_move = MethodType(crop_move, constraint)
+
+
+def _finalize_constraint(constraint: Any, device: str) -> Any:
+    """Place tensors on ``device`` and patch EE ``crop_move`` for multi-prompt segments."""
+    constraint = _place_constraint_tensors(constraint, device)
+    if isinstance(constraint, _EndEffectorTypes):
+        _bind_crop_move_device(constraint, device)
+    return constraint
 
 
 def _constraint_to_kimodo(
@@ -353,6 +408,8 @@ def _pose_keyframe(
     root_t = torch.tensor(root_world[None, :], device=device)
 
     global_rots_t, posed_positions, _ = model.skeleton.fk(local_rots_t, root_t)
+    global_rots_t = global_rots_t.to(device=device)
+    posed_positions = posed_positions.to(device=device)
 
     frames = torch.tensor([c.frame], dtype=torch.long, device=device)
 

@@ -40,7 +40,7 @@ def main() -> None:
 
     if args.quantize:
         os.environ["KIMODO_QUANTIZE"] = args.quantize.lower()
-
+ 
     serve(
         KimodoBackbone(model_id=args.model, device=args.device),
         host=args.host,
