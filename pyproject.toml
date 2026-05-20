@@ -52,7 +52,7 @@ allow-direct-references = true
 packages = ["src/motionmcp_kimodo"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/motionmcp_kimodo", "tests", "README.md", "LICENSE"]
+include = ["src/motionmcp_kimodo", "tests", "docs", "README.md", "LICENSE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

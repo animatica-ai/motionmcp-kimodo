@@ -1,117 +1,79 @@
 # motionmcp-kimodo
 
-One of the **officially supported MMCP servers**. Wraps the
-[Kimodo][kimodo] motion model in the [MMCP protocol][mmcp] — a drop-in
-[`motionmcp.Backbone`][backbone] you can run on your own hardware.
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/animatica-ai/motionmcp-kimodo)
 
-Install from source:
+**Self-hosted [MMCP](https://animatica.ai/mmcp) server for [Kimodo](https://github.com/animatica-ai/kimodo) motion generation.**
+
+Run Kimodo on your own GPU and expose it over HTTP so any MMCP client can generate animation. The reference client is **[Proscenium for Blender](https://github.com/animatica-ai/proscenium-blender)** — text prompts, paths, and pose constraints on your armature.
+
+> **Alpha** — APIs and packaging may change. Tracks `motionmcp` 0.1.x and Kimodo 1.x.
+
+## Features
+
+- **MMCP-native** — implements [`motionmcp.Backbone`](https://animatica.ai/mmcp/docs/sdk/backbone); capabilities, `/generate`, glTF responses
+- **Kimodo SOMA models** — loads Kimodo checkpoints; maps MMCP requests to Kimodo inference
+- **Constraint-aware** — root paths, effector targets, pose keyframes (see [MMCP concepts](https://animatica.ai/mmcp/docs/concepts/skeleton))
+- **Simple CLI** — `motionmcp-kimodo --port 8000` for local or LAN use
+- **Embeddable** — mount `KimodoBackbone` in your own FastAPI / ASGI app ([Development](docs/DEVELOPMENT.md))
+
+## Requirements
+
+| | |
+|---|---|
+| **Python** | 3.10+ |
+| **GPU** | NVIDIA GPU strongly recommended (CUDA-capable PyTorch) |
+| **Build tools** | CMake + C++ compiler — Kimodo builds **MotionCorrection** during install ([guide](docs/MOTION_CORRECTION.md)) |
+| **Git** | Required for `pip` install (Kimodo is not on PyPI) |
+
+Full setup (Blender addon, troubleshooting): **[Installation](docs/INSTALL.md)**.
+
+## Quick start
 
 ```bash
-git clone https://github.com/animatica-ai/motionmcp-kimodo
-cd motionmcp-kimodo
-pip install -e .
-```
-
-This pulls [Kimodo][kimodo] from `animatica-ai/kimodo` (a fork of the
-upstream `nv-tlabs/kimodo` with fixes for common install / runtime
-issues) as a git dependency — it isn't on PyPI. If the install fails
-on the Kimodo step, follow the install instructions in that repo and
-re-run `pip install -e .`.
-
-Run:
-
-```bash
+pip install "motionmcp-kimodo @ git+https://github.com/animatica-ai/motionmcp-kimodo.git"
 motionmcp-kimodo --port 8000
 ```
 
-That's a working MMCP server for Kimodo on `:8000`. Point the
-[Proscenium Blender plugin][proscenium] (the officially supported
-client) at `http://localhost:8000` and you're animating.
+Install [Proscenium](https://github.com/animatica-ai/proscenium-blender/releases/latest), set **Server** to `http://localhost:8000`, and connect from the N-panel.
 
-[kimodo]: https://github.com/animatica-ai/kimodo
-[proscenium]: https://github.com/animatica-ai/proscenium-blender
-[backbone]: https://animatica.ai/mmcp/docs/sdk/backbone
-[mmcp]: https://animatica.ai/mmcp
-[impls]: https://animatica.ai/mmcp/docs/get-started/implementations
+Install can take **30+ minutes** on first run (PyTorch, Kimodo, MotionCorrection compile). Use `pip install -v ...` to see progress.
 
-## What this package is
+## Documentation
 
-A thin glue layer:
-
-- **Backbone**: [`KimodoBackbone`](src/motionmcp_kimodo/backbone.py)
-  wraps the Kimodo model in `motionmcp.Backbone`. Loads weights, pre-builds
-  a `ModelSpec`, runs `model(...)`, encodes the result as a `MotionResult`.
-- **Translation**: [`translate.py`](src/motionmcp_kimodo/translate.py)
-  converts an MMCP `GenerateRequest` into the kwargs the Kimodo model
-  expects (prompts, segment durations, constraint sets).
-- **Skeleton helpers**: [`skeleton.py`](src/motionmcp_kimodo/skeleton.py)
-  converts a Kimodo skeleton object to the MMCP wire shape and resolves
-  the four foot-contact channels to skeleton-specific joint names.
-
-The [`motionmcp`][backbone] SDK does the rest — wire-format validation,
-glTF encoding, error envelope, generic per-request checks.
-
-## Usage
-
-```bash
-# Defaults: port 8000, default kimodo model, cuda:0 if available else cpu.
-motionmcp-kimodo
-
-# Pick a model + bind explicitly:
-motionmcp-kimodo --model soma30 --port 8000 --device cuda:0
-
-# Text encoder: quantize the local LLM (LLM2Vec) to save VRAM — only when
-# TEXT_ENCODER_MODE=local (see table below). Values are Kimodo’s: 4bit or 8bit.
-TEXT_ENCODER_MODE=local motionmcp-kimodo --quantize 4bit
-
-# Or run as a module:
-python -m motionmcp_kimodo --model soma30
-```
-
-The CLI `--quantize` flag sets `KIMODO_QUANTIZE` for Kimodo. It does **not**
-affect the motion/diffusion weights — only the **text encoder** when Kimodo
-loads `LLM2VecEncoder` (`TEXT_ENCODER_MODE=local`, or `auto` when falling
-back to local). The default server uses `TEXT_ENCODER_MODE=dummy`, so no LLM
-is loaded and `--quantize` has no effect unless you switch the mode.
-
-Clients pull the model's canonical skeleton from `/capabilities` and
-send it verbatim in their `/generate` request — the wire format is
-documented in the [MMCP docs][mmcp].
-
-Environment overrides:
-
-| Var | Effect |
+| Guide | Description |
 |---|---|
-| `KIMODO_MODEL` | Default model id when `--model` isn't passed |
-| `TEXT_ENCODER_MODE` | Kimodo text path: `dummy` (default, no LLM), `local` (LLM2Vec on GPU), `api`, `auto`, etc. See Kimodo’s `load_model` docs. |
-| `KIMODO_QUANTIZE` | When using the local LLM encoder: `4bit` or `8bit` (BitsAndBytes). Set by `--quantize` or manually. Ignored with `dummy`. |
+| [Installation](docs/INSTALL.md) | End-to-end setup with Proscenium |
+| [MotionCorrection](docs/MOTION_CORRECTION.md) | C++ build step (common install blocker) |
+| [Usage](docs/USAGE.md) | CLI, ports, models, environment variables |
+| [Development](docs/DEVELOPMENT.md) | Architecture and programmatic use |
+| [Docs index](docs/README.md) | All guides and external links |
 
-## Programmatic use
+## Related projects
 
-If you want to mount Kimodo alongside other backbones, into a custom
-FastAPI app, or behind your own ASGI deployment:
+| Project | Role |
+|---|---|
+| [MMCP](https://animatica.ai/mmcp) | Motion Model Communication Protocol |
+| [motionmcp](https://github.com/animatica-ai/motionmcp) | Python SDK (`Backbone`, server helpers) |
+| [Kimodo](https://github.com/animatica-ai/kimodo) | Motion diffusion model (dependency) |
+| [Proscenium](https://github.com/animatica-ai/proscenium-blender) | Official Blender client |
+| [Implementations](https://animatica.ai/mmcp/docs/get-started/implementations) | All official servers & clients |
 
-```python
-from motionmcp import build_app, serve
-from motionmcp_kimodo import KimodoBackbone
+## Contributing
 
-# Single backbone:
-serve(KimodoBackbone(model_id="soma30"))
+Contributions are welcome.
 
-# Mount alongside others:
-app = build_app({
-    "kimodo-soma": KimodoBackbone(model_id="soma30"),
-    "kimodo-fast": KimodoBackbone(model_id="soma30-fast"),
-})
-# then run with uvicorn server:app --workers 4 etc.
-```
+1. Check [open issues](https://github.com/animatica-ai/motionmcp-kimodo/issues) or open one to discuss larger changes.
+2. Clone, install dev deps, and run tests — see [Development](docs/DEVELOPMENT.md).
+3. Open a pull request with a clear description and test plan.
 
-See the [`motionmcp` SDK docs][backbone] for the full Backbone surface.
+Bug reports for install failures: include OS, Python version, and the full `pip install -v` log (especially the MotionCorrection build).
 
-## Status
+## Community
 
-Alpha. Tracks `motionmcp` 0.1.x and Kimodo 1.x.
+**[Animatica AI Discord](https://discord.com/invite/A8CrURBewz)** — questions, install help, Proscenium, and MMCP/Kimodo discussion.
 
 ## License
 
-Apache 2.0.
+[Apache License 2.0](LICENSE). Kimodo model weights and third-party deps have separate licenses — see [Kimodo](https://github.com/animatica-ai/kimodo) and Hugging Face model cards.
